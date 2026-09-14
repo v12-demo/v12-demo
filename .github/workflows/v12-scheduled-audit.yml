@@ -1,0 +1,61 @@
+# Scheduled V12 audit of the default branch (master): a full-tree audit of
+# src/ once a day. Results go to a check run, the job summary and, via SARIF,
+# to Security -> Code scanning.
+#
+# Full audits are fixed-price and charged when the run starts, so the cost
+# ceiling below matters. To make idle days free, switch to the diff-sweep
+# variant at the bottom of the file.
+#
+# GitHub schedule caveats:
+#   - cron is UTC and only fires from the default branch (master);
+#   - ticks can start minutes late under load, or be dropped;
+#   - on a public repository GitHub disables scheduled workflows after 60 days
+#     without a commit; on a fork (this repository is one) they stay disabled
+#     until enabled once under Actions -> "V12 scheduled audit".
+name: V12 scheduled audit
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily, 06:00 UTC
+    # Other frequencies (swap the line above, or list several):
+    # - cron: '0 6 * * 1-5'  # weekdays only, 06:00 UTC
+    # - cron: '0 6 * * 1'    # weekly, Mondays 06:00 UTC
+    # - cron: '0 5 1 * *'    # monthly, 1st of the month 05:00 UTC
+    # - cron: '0 */12 * * *' # twice a day
+  workflow_dispatch: # "Run workflow" button, handy for the demo
+
+# Never cancel a billed audit; a second tick queues behind the first.
+concurrency:
+  group: v12-scheduled
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  checks: write # check run
+  security-events: write # SARIF upload into the Security tab
+
+jobs:
+  v12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0 # needed only by the diff variant below; harmless here
+          persist-credentials: false
+
+      # Pinned to the v1.0.0 release. Use metarsit/v12-action@v1 to track the
+      # latest 1.x once the release workflow moves the major tag.
+      - uses: metarsit/v12-action@v1.0.0
+        with:
+          v12-token: ${{ secrets.V12_TOKEN }}
+          mode: full # whole tree at the branch tip (also the default on schedule)
+          paths: src/ # contracts only; lib/ and test/ never reach V12
+          max-cost-cents: 10000 # abort when the quote is above $100
+          wait-timeout-minutes: 90
+          upload-sarif: true
+          # --- Diff-sweep variant: free when nothing landed since the last tick ---
+          # Replace `mode: full` with these two lines. The action skips the run
+          # (no charge) when no commit under src/ landed inside the window.
+          # mode: diff
+          # since: '1 day ago' # match the cron: '7 days ago' for weekly, etc.

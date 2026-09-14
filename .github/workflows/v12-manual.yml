@@ -1,0 +1,59 @@
+# Manual V12 audit with the mode chosen at dispatch time. Handy during a demo:
+# Actions -> "V12 audit (manual)" -> Run workflow. Tick estimate-only to show
+# the price quote without creating a run, or set pr-number to post the result
+# as a comment on a specific pull request.
+name: V12 audit (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'What to audit'
+        type: choice
+        options: [full, diff]
+        default: full
+      since:
+        description: 'Window for diff mode, e.g. "14 days ago"'
+        type: string
+        default: '14 days ago'
+      fail-on:
+        description: 'Fail the job at this severity or above'
+        type: choice
+        options: [none, critical, high, medium, low]
+        default: none
+      estimate-only:
+        description: 'Only print the quote, create nothing'
+        type: boolean
+        default: false
+      pr-number:
+        description: 'Pull request to comment on (optional)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write # only used when pr-number is set
+
+jobs:
+  v12:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0 # required to resolve the diff window
+          persist-credentials: false
+
+      # Pinned to the v1.0.0 release. Use metarsit/v12-action@v1 to track the
+      # latest 1.x once the release workflow moves the major tag.
+      - uses: metarsit/v12-action@v1.0.0
+        with:
+          v12-token: ${{ secrets.V12_TOKEN }}
+          mode: ${{ inputs.mode }}
+          since: ${{ inputs.mode == 'diff' && inputs.since || '' }}
+          fail-on: ${{ inputs.fail-on }}
+          estimate-only: ${{ inputs.estimate-only }}
+          pr-number: ${{ inputs.pr-number }}
+          paths: src/ # contracts only
+          max-cost-cents: 10000 # abort when the quote is above $100

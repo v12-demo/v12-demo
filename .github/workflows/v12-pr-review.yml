@@ -1,0 +1,48 @@
+# V12 security review of every pull request. Informative by default: findings
+# land in a sticky PR comment, a check run with inline annotations and the job
+# summary, and never block the merge. Pull requests from forks are skipped
+# automatically (they receive no secrets).
+#
+# Demo flow: open a PR that touches src/ (for example a new vulnerable function
+# in src/Vault.sol) and V12 comments on it a few minutes later.
+name: V12 security review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# One review per pull request at a time; a new push cancels the older run
+# (the action cancels the V12 run too, so nothing keeps billing).
+concurrency:
+  group: v12-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write # sticky comment
+  checks: write # check run with inline annotations
+
+jobs:
+  v12:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0 # exact merge base for the diff
+          persist-credentials: false
+
+      # Pinned to the v1.0.0 release. Use metarsit/v12-action@v1 to track the
+      # latest 1.x once the release workflow moves the major tag.
+      - uses: metarsit/v12-action@v1.0.0
+        with:
+          v12-token: ${{ secrets.V12_TOKEN }}
+          # Contracts only. A PR that changes nothing under src/ (docs, tests,
+          # workflows) is skipped before anything is billed.
+          paths: src/
+          # Abort before creating a run when V12 quotes more than $50.
+          max-cost-cents: 5000
+          # Blocking mode: uncomment to fail the job on critical findings (and
+          # block the merge once the check is required in branch protection).
+          # fail-on: critical
