@@ -49,6 +49,7 @@ jobs:
       - uses: metarsit/v12-action@v1.0.0
         with:
           v12-token: ${{ secrets.V12_TOKEN }}
+          api-url: https://v12.ac # staging; drop this line for production (default https://v12.sh)
           mode: full # whole tree at the branch tip (also the default on schedule)
           paths: src/ # contracts only; lib/ and test/ never reach V12
           max-cost-cents: 10000 # abort when the quote is above $100

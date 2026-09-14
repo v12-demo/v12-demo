@@ -50,6 +50,7 @@ jobs:
       - uses: metarsit/v12-action@v1.0.0
         with:
           v12-token: ${{ secrets.V12_TOKEN }}
+          api-url: https://v12.ac # staging; drop this line for production (default https://v12.sh)
           mode: ${{ inputs.mode }}
           since: ${{ inputs.mode == 'diff' && inputs.since || '' }}
           fail-on: ${{ inputs.fail-on }}
