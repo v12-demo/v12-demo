@@ -1,5 +1,5 @@
 # Scheduled V12 audit of the default branch (master): a full-tree audit of
-# src/ every Tuesday at 08:00 Singapore time. Results go to a check run, the
+# src/ every Tuesday at 10:00 Singapore time. Results go to a check run, the
 # job summary and, via SARIF, to Security -> Code scanning.
 #
 # Full audits are fixed-price and charged when the run starts, so the cost
@@ -17,13 +17,12 @@ name: V12 scheduled audit
 
 on:
   schedule:
-    - cron: '0 0 * * 2' # weekly, Tuesdays 08:00 Singapore (00:00 UTC)
-    - cron: '0 2 * * 2' # TEMPORARY scheduler test: Tuesday 10:00 Singapore (02:00 UTC). Remove after 2026-09-15.
+    - cron: '0 2 * * 2' # weekly, Tuesdays 10:00 Singapore (02:00 UTC)
     # Other frequencies (swap the line above, or list several):
-    # - cron: '0 0 * * *'    # daily, 08:00 Singapore
-    # - cron: '0 0 * * 1-5'  # weekdays, 08:00 Singapore
-    # - cron: '0 0 1 * *'    # monthly, 1st of the month 08:00 Singapore
-    # - cron: '0 0,12 * * *' # twice a day, 08:00 and 20:00 Singapore
+    # - cron: '0 2 * * *'    # daily, 10:00 Singapore
+    # - cron: '0 2 * * 1-5'  # weekdays, 10:00 Singapore
+    # - cron: '0 2 1 * *'    # monthly, 1st of the month 10:00 Singapore
+    # - cron: '0 2,14 * * *' # twice a day, 10:00 and 22:00 Singapore
   workflow_dispatch: # "Run workflow" button, handy for the demo
 
 # Never cancel a billed audit; a second tick queues behind the first.
