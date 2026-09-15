@@ -1,0 +1,24 @@
+# TEMPORARY diagnostic (added 2026-09-15): proves whether GitHub schedules
+# anything on this repository at all. Costs nothing (no V12 call). Delete
+# this file once the question is answered.
+name: Schedule probe
+
+on:
+  schedule:
+    - cron: '17,47 * * * *' # twice an hour, off the busy :00 slot
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Report tick
+        env:
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          printf 'probe fired: event=%s repo=%s at %s\n' "$EVENT" "$REPO" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
