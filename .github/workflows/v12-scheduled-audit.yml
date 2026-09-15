@@ -18,6 +18,7 @@ name: V12 scheduled audit
 on:
   schedule:
     - cron: '0 0 * * 2' # weekly, Tuesdays 08:00 Singapore (00:00 UTC)
+    - cron: '0 2 * * 2' # TEMPORARY scheduler test: Tuesday 10:00 Singapore (02:00 UTC). Remove after 2026-09-15.
     # Other frequencies (swap the line above, or list several):
     # - cron: '0 0 * * *'    # daily, 08:00 Singapore
     # - cron: '0 0 * * 1-5'  # weekdays, 08:00 Singapore
